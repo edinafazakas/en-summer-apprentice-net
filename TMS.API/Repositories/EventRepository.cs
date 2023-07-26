@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TMS.API.Models;
 
 namespace TMS.API.Repositories
@@ -13,22 +14,15 @@ namespace TMS.API.Repositories
         }
         public int Add(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Events.Add(@event);
+            //_dbContext.SaveChanges();
+            return @event.EventId;
         }
 
-        public int Delete(int id)
+        public void Delete(Event @event)
         {
-            var @event = _dbContext.Events.FirstOrDefault(e => e.EventId == id);
-
-            if (@event == null)
-            {
-                return 0;
-            }
-
-            _dbContext.Events.Remove(@event);
+            _dbContext.Remove(@event);
             _dbContext.SaveChanges();
-
-            return id;
         }
 
         public IEnumerable<Event> GetAll()
@@ -37,7 +31,7 @@ namespace TMS.API.Repositories
             return events;
         }
 
-        public Event GetById(int id)
+        public async Task<Event> GetById(int id)
         {
             var @event = _dbContext.Events.Where(e => e.EventId == id).FirstOrDefault();
             return @event;
@@ -45,7 +39,8 @@ namespace TMS.API.Repositories
 
         public void Update(Event @event)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(@event).State = EntityState.Modified;
+            _dbContext.SaveChanges();
         }
     }
 }

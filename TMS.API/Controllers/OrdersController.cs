@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using TMS.API.Models;
 using TMS.API.Models.Dto;
 using TMS.API.Repositories;
 
@@ -10,10 +13,16 @@ namespace TMS.API.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly ITicketCategoryRepository _ticketCategoryRepository;
+        private readonly ICustomerRepository _customerRepository;
+        private readonly IMapper _mapper;
 
-        public OrdersController(IOrderRepository orderRepository)
+        public OrdersController(IOrderRepository orderRepository, IMapper mapper, ITicketCategoryRepository ticketCategoryRepository, ICustomerRepository customerRepository)
         {
             _orderRepository = orderRepository;
+            _ticketCategoryRepository = ticketCategoryRepository;
+            _customerRepository = customerRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -34,37 +43,85 @@ namespace TMS.API.Controllers
 
 
         [HttpGet]
-        public ActionResult<OrderDto> GetById(int id)
+        public async Task<ActionResult<OrderDto>> GetById(int id)
         {
-            var order = _orderRepository.GetById(id);
+            var order = await _orderRepository.GetById(id);
 
             if (order == null)
             {
                 return NotFound();
             }
 
-            var dtoOrder = new OrderDto()
-            {
-                OrderId = order.OrderId,
-                OrderedAt = order.OrderedAt,
-                TotalPrice = order.TotalPrice,
-                NumberOfTickets = order.NumberOfTickets,
-            };
+            var orderDto = _mapper.Map<OrderDto>(order);
 
-            return Ok(dtoOrder);
+            return Ok(orderDto);
         }
 
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var deletedOrderId = _orderRepository.Delete(id);
+            var deletedOrder = await _orderRepository.GetById(id);
+            if (deletedOrder == null)
+            {
+                return NotFound();
+            }
+            _orderRepository.Delete(deletedOrder);
+            return Ok(deletedOrder);
+        }
 
-            if (deletedOrderId == 0)
+        [HttpPatch]
+        public async Task<ActionResult<OrderPatchDto>> Patch(OrderPatchDto orderPatchDto)
+        {
+            var orderEntity = await _orderRepository.GetById(orderPatchDto.OrderId);
+            var ticketCategoryEntity = await _ticketCategoryRepository.GetById(orderEntity.TicketCategoryId);
+            if (orderEntity == null)
             {
                 return NotFound();
             }
 
-            return Ok(new { message = "Order deleted successfully." });
+            if (orderPatchDto.NumberOfTickets != 0)
+                orderEntity.NumberOfTickets = orderPatchDto.NumberOfTickets;
+
+            orderEntity.TotalPrice = orderPatchDto.NumberOfTickets * ticketCategoryEntity.Price;
+            _orderRepository.Update(orderEntity);
+            return Ok(orderEntity);
         }
+
+
+
+        [HttpPost]
+        public async Task<ActionResult<int>> AddOrder(OrderAddDto orderDto)
+        {
+
+            var order = new Order()
+            {
+                OrderedAt = orderDto.OrderedAt,
+                NumberOfTickets = orderDto.NumberOfTickets,
+                CustomerId = orderDto.CustomerId,
+                TicketCategoryId = orderDto.TicketCategoryId,
+                TotalPrice = orderDto.NumberOfTickets * (await _ticketCategoryRepository.GetById(orderDto.TicketCategoryId)).Price,
+            };
+
+            int orderId = _orderRepository.Add(order);
+
+            var ticketCategory = await _ticketCategoryRepository.GetById(orderDto.TicketCategoryId);
+            if (ticketCategory == null)
+            {
+                return NotFound("Ticket category not found.");
+            }
+
+            var customer = await _customerRepository.GetById(orderDto.CustomerId);
+            if (customer == null)
+            {
+                return NotFound("Customer not found.");
+            }
+            //var orderEntity = await _orderRepository.GetById(orderId);
+            //_orderRepository.Update(orderEntity);
+
+            return Ok(orderId);
+        }
+
+
+
     }
 }

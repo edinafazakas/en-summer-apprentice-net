@@ -1,5 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using TMS.API.Models;
 using TMS.API.Models.Dto;
 using TMS.API.Repositories;
@@ -11,10 +14,12 @@ namespace TMS.API.Controllers
     public class EventController : ControllerBase
     {
         private readonly IEventRepository _eventRepository;
+        private readonly IMapper _mapper;
 
-        public EventController(IEventRepository eventRepository)
+        public EventController(IEventRepository eventRepository, IMapper mapper)
         {
             _eventRepository = eventRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -25,10 +30,10 @@ namespace TMS.API.Controllers
             var dtoEvents = events.Select(e => new EventDto()
             {
                 EventId = e.EventId,
-                EventDescription = e.Description,
-                EventName = e.Name,
-                EventType = e.EventType?.Name ?? string.Empty,
-                Venue = e.Venue?.Location ?? string.Empty
+                Description = e.Description,
+                Name = e.Name,
+                EventTypeId = e.EventTypeId,
+                VenueId = e.VenueId
             });
 
             return Ok(dtoEvents);
@@ -36,38 +41,57 @@ namespace TMS.API.Controllers
 
 
         [HttpGet]
-        public ActionResult<EventDto> GetById(int id)
+        public async Task<ActionResult<EventDto>> GetById(int id)
         {
-            var @event = _eventRepository.GetById(id);
+            var @event = await _eventRepository.GetById(id);
 
             if (@event == null)
             {
                 return NotFound();
             }
 
-            var dtoEvent = new EventDto()
-            {
-                EventId = @event.EventId,
-                EventDescription = @event.Description,
-                EventName = @event.Name,
-                EventType = @event.EventType?.Name ?? string.Empty,
-                Venue = @event.Venue?.Location ?? string.Empty
-            };
-
-            return Ok(dtoEvent);
+            var eventDto = _mapper.Map<EventDto>(@event);
+            return Ok(eventDto);
         }
 
         [HttpDelete]
-        public IActionResult Delete(int id)
+        public async Task<ActionResult> Delete(int id)
         {
-            var deletedEventId = _eventRepository.Delete(id);
+            var deletedEvent = await _eventRepository.GetById(id);
+            if (deletedEvent == null)
+            {
+                return NotFound();
+            }
+            _eventRepository.Delete(deletedEvent);
+            return Ok(deletedEvent);
+        }
 
-            if (deletedEventId == 0)
+        [HttpPatch]
+        public async Task<ActionResult<EventPatchDto>> Patch(EventPatchDto eventPatch)
+        {
+            var eventEntity = await _eventRepository.GetById(eventPatch.EventId);
+            if (eventEntity == null)
             {
                 return NotFound();
             }
 
-            return Ok(new { message = "Event deleted successfully." });
+            if (!eventPatch.EventName.IsNullOrEmpty()) 
+                eventEntity.Name = eventPatch.EventName;
+
+            if (!eventPatch.EventDescription.IsNullOrEmpty())  
+                eventEntity.Description = eventPatch.EventDescription;
+
+            _eventRepository.Update(eventEntity);
+            return Ok(eventEntity);
         }
+
+        [HttpPost]
+        public ActionResult<int> AddEvent(EventAddDto eventAddDto)
+        {
+            var eventEntity = _mapper.Map<Event>(eventAddDto);
+            int eventId = _eventRepository.Add(eventEntity);
+            return Ok(eventId);
+        }
+
     }
 }

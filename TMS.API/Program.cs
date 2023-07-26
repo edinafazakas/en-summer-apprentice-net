@@ -1,4 +1,5 @@
 using TMS.API.Repositories;
+using TMS.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IEventRepository, EventRepository>();
 builder.Services.AddTransient<IOrderRepository, OrderRepository>();
+builder.Services.AddTransient<ITicketCategoryRepository, TicketCategoryRepository>();
+builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
+builder.Services.AddTransient<IVenueRepository, VenueRepository>();
+builder.Services.AddTransient<IEventTypeRepository, EventTypeRepository>();
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddSingleton<ITestService, TestService>();
+
 
 var app = builder.Build();
 

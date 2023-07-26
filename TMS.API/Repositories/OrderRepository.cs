@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TMS.API.Models;
 
 namespace TMS.API.Repositories
@@ -11,24 +12,17 @@ namespace TMS.API.Repositories
         {
             _dbContext = new TicketManagementContext();
         }
-        public int Add(Order @event)
+        public int Add(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Orders.Add(order);
+            _dbContext.SaveChanges();
+            return order.OrderId; 
         }
 
-        public int Delete(int id)
+        public void Delete(Order order)
         {
-            var order = _dbContext.Orders.FirstOrDefault(o => o.OrderId == id);
-
-            if (order == null)
-            {
-                return 0;
-            }
-
-            _dbContext.Orders.Remove(order);
+            _dbContext.Remove(order);
             _dbContext.SaveChanges();
-
-            return id;
         }
 
         public IEnumerable<Order> GetAll()
@@ -37,15 +31,16 @@ namespace TMS.API.Repositories
             return orders;
         }
 
-        public Order GetById(int id)
+        public async Task<Order> GetById(int id)
         {
-            var order = _dbContext.Orders.Where(o => o.OrderId == id).FirstOrDefault();
+            var order =  _dbContext.Orders.Where(o => o.OrderId == id).FirstOrDefault();
             return order;
         }
 
-        public void Update(Order @event)
+        public void Update(Order order)
         {
-            throw new NotImplementedException();
+            _dbContext.Entry(order).State = EntityState.Modified;
+            _dbContext.SaveChanges();
         }
     }
 }

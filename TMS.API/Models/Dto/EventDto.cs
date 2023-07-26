@@ -2,14 +2,15 @@
 {
     public class EventDto
     {
-        public long EventId { get; set; }
+        public int EventId { get; set; }
 
-        public string EventName { get; set; } = string.Empty;
+        public int? VenueId { get; set; }
 
-        public string EventDescription { get; set; }
+        public int? EventTypeId { get; set; }
 
-        public string EventType { get; set; }
+        public string? Name { get; set; }
 
-        public string Venue { get; set; }
+        public string? Description { get; set; }
+
     }
 }
