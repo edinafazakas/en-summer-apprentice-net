@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TMS.API.Models;
 
@@ -15,7 +16,7 @@ namespace TMS.API.Repositories
         public int Add(Event @event)
         {
             _dbContext.Events.Add(@event);
-            //_dbContext.SaveChanges();
+            _dbContext.SaveChanges();
             return @event.EventId;
         }
 
@@ -31,11 +32,13 @@ namespace TMS.API.Repositories
             return events;
         }
 
+
         public async Task<Event> GetById(int id)
         {
-            var @event = _dbContext.Events.Where(e => e.EventId == id).FirstOrDefault();
+            var @event = _dbContext.Events.Where(o => o.EventId == id).FirstOrDefault();
             return @event;
         }
+
 
         public void Update(Event @event)
         {

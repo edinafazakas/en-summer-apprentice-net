@@ -51,6 +51,7 @@ namespace TMS.API.Controllers
             }
 
             var eventDto = _mapper.Map<EventDto>(@event);
+
             return Ok(eventDto);
         }
 
