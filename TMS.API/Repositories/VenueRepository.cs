@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TMS.API.Exceptions;
 using TMS.API.Models;
 
 namespace TMS.API.Repositories
@@ -16,7 +17,10 @@ namespace TMS.API.Repositories
 
         public async Task<Venue> GetById(int? id)
         {
-            var venue = _dbContext.Venues.Where(v => v.VenueId == id).FirstOrDefault();
+            var venue = await _dbContext.Venues.Where(v => v.VenueId == id).FirstOrDefaultAsync();
+
+            if (venue == null)
+                throw new EntityNotFoundException(id, nameof(Venue));
             return venue;
         }
     }

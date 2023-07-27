@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TMS.API.Exceptions;
 using TMS.API.Models;
 
 namespace TMS.API.Repositories
@@ -35,7 +36,11 @@ namespace TMS.API.Repositories
 
         public async Task<Event> GetById(int id)
         {
-            var @event = _dbContext.Events.Where(o => o.EventId == id).FirstOrDefault();
+            var @event = await _dbContext.Events.Where(o => o.EventId == id).FirstOrDefaultAsync();
+             
+            if (@event == null)
+                throw new EntityNotFoundException(id, nameof(Event));
+            
             return @event;
         }
 

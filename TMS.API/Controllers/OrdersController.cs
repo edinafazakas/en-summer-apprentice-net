@@ -46,12 +46,6 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<OrderDto>> GetById(int id)
         {
             var order = await _orderRepository.GetById(id);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
             var orderDto = _mapper.Map<OrderDto>(order);
 
             return Ok(orderDto);
@@ -60,11 +54,7 @@ namespace TMS.API.Controllers
         [HttpDelete]
         public async Task<ActionResult> Delete(int id)
         {
-            var deletedOrder = await _orderRepository.GetById(id);
-            if (deletedOrder == null)
-            {
-                return NotFound();
-            }
+            var deletedOrder = await _orderRepository.GetById(id);           
             _orderRepository.Delete(deletedOrder);
             return Ok(deletedOrder);
         }
@@ -74,10 +64,6 @@ namespace TMS.API.Controllers
         {
             var orderEntity = await _orderRepository.GetById(orderPatchDto.OrderId);
             var ticketCategoryEntity = await _ticketCategoryRepository.GetById(orderEntity.TicketCategoryId);
-            if (orderEntity == null)
-            {
-                return NotFound();
-            }
 
             if (orderPatchDto.NumberOfTickets != 0)
                 orderEntity.NumberOfTickets = orderPatchDto.NumberOfTickets;
@@ -93,17 +79,8 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<int>> AddOrder(OrderAddDto orderDto)
         {
             var ticketCategory = await _ticketCategoryRepository.GetById(orderDto.TicketCategoryId);
-            if (ticketCategory == null)
-            {
-                return NotFound("Ticket category not found.");
-            }
-
             var customer = await _customerRepository.GetById(orderDto.CustomerId);
-            if (customer == null)
-            {
-                return NotFound("Customer not found.");
-            }
-
+  
             var order = new Order()
             {
                 OrderId = orderDto.OrderId,

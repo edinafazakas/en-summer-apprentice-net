@@ -15,15 +15,18 @@ namespace TMS.API.Controllers
     {
         private readonly IEventRepository _eventRepository;
         private readonly IEventTypeRepository _eventTypeRepository;
-        private readonly IVenueRepository _venueRepository; 
+        private readonly IVenueRepository _venueRepository;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
 
-        public EventController(IEventRepository eventRepository, IMapper mapper, IEventTypeRepository eventTypeRepository, IVenueRepository venueRepository)
+        public EventController(IEventRepository eventRepository, IMapper mapper, IEventTypeRepository eventTypeRepository, IVenueRepository venueRepository, ILogger<EventController> logger)
         {
             _eventRepository = eventRepository;
             _eventTypeRepository = eventTypeRepository;
             _venueRepository = venueRepository;
             _mapper = mapper;
+            _logger = logger;
+
         }
 
         [HttpGet]
@@ -48,25 +51,16 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<EventDto>> GetById(int id)
         {
             var @event = await _eventRepository.GetById(id);
-
-            if (@event == null)
-            {
-                return NotFound();
-            }
-
             var eventDto = _mapper.Map<EventDto>(@event);
 
             return Ok(eventDto);
+
         }
 
         [HttpDelete]
         public async Task<ActionResult> Delete(int id)
         {
             var deletedEvent = await _eventRepository.GetById(id);
-            if (deletedEvent == null)
-            {
-                return NotFound();
-            }
             _eventRepository.Delete(deletedEvent);
             return Ok(deletedEvent);
         }
@@ -74,16 +68,18 @@ namespace TMS.API.Controllers
         [HttpPatch]
         public async Task<ActionResult<EventPatchDto>> Patch(EventPatchDto eventPatch)
         {
-            var eventEntity = await _eventRepository.GetById(eventPatch.EventId);
-            if (eventEntity == null)
+
+            if (eventPatch == null)
             {
-                return NotFound();
+                throw new ArgumentNullException(nameof(eventPatch));
             }
 
-            if (!eventPatch.EventName.IsNullOrEmpty()) 
+            var eventEntity = await _eventRepository.GetById(eventPatch.EventId);
+
+            if (!eventPatch.EventName.IsNullOrEmpty())
                 eventEntity.Name = eventPatch.EventName;
 
-            if (!eventPatch.EventDescription.IsNullOrEmpty())  
+            if (!eventPatch.EventDescription.IsNullOrEmpty())
                 eventEntity.Description = eventPatch.EventDescription;
 
             _eventRepository.Update(eventEntity);
@@ -94,16 +90,7 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<int>> AddEvent(EventAddDto eventAddDto)
         {
             var eventType = await _eventTypeRepository.GetById(eventAddDto.EventTypeId);
-            if (eventType == null)
-            {
-                return NotFound("Event type not found.");
-            }
-
             var venue = await _venueRepository.GetById(eventAddDto.VenueId);
-            if (venue == null)
-            {
-                return NotFound("Venue not found.");
-            }
 
             var @event = new Event()
             {
