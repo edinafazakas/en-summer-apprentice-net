@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using TMS.API.Exceptions;
 using TMS.API.Models;
 using TMS.API.Models.Dto;
 using TMS.API.Repositories;
@@ -32,6 +34,10 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<OrderDto>> GetById(int id)
         {
             var orderDto = await _orderService.GetById(id);
+            if (orderDto == null)
+            {
+                throw new EntityNotFoundException(id, nameof(Order));
+            }
             return Ok(orderDto);
         }
 
@@ -39,6 +45,10 @@ namespace TMS.API.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             var deletedOrder = await _orderService.GetById(id);
+            if (deletedOrder == null)
+            {
+                throw new EntityNotFoundException(id, nameof(Order));
+            }
             _orderService.Delete(id);
             return Ok(deletedOrder);
         }
@@ -55,7 +65,7 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<int>> AddOrder(OrderAddDto orderDto)
         {
             var orderId =  await _orderService.AddOrder(orderDto);
-            return Ok(orderId);
+            return Created("", "Order with id " + orderId + " created successfully!");
         }
 
     }

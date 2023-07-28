@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using TMS.API.Exceptions;
 using TMS.API.Models;
 using TMS.API.Models.Dto;
 using TMS.API.Repositories;
@@ -34,6 +35,10 @@ namespace TMS.API.Controllers
         public async Task<ActionResult<EventDto>> GetById(int id)
         {
             var eventDto = await _eventService.GetById(id);
+            if (eventDto == null)
+            {
+                throw new EntityNotFoundException(id, nameof(Event));
+            }
             return Ok(eventDto);
 
         }
@@ -42,6 +47,10 @@ namespace TMS.API.Controllers
         public async Task<ActionResult> Delete(int id)
         {
             var deletedEvent = await _eventService.GetById(id);
+            if (deletedEvent == null)
+            {
+                throw new EntityNotFoundException(id, nameof(Event));
+            }
             _eventService.Delete(id);
             return Ok(deletedEvent);
         }
@@ -58,8 +67,7 @@ namespace TMS.API.Controllers
         public ActionResult<int> AddEvent(EventAddDto eventAddDto)
         {
             var eventId =  _eventService.AddEvent(eventAddDto);
-
-            return Ok(eventId);
+            return Created("", "Event with id " + eventId + " created successfully!");
         }
 
     }

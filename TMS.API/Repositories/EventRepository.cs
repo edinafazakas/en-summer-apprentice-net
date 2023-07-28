@@ -40,12 +40,6 @@ namespace TMS.API.Repositories
         public async Task<Event> GetById(int id)
         {
             var @event = await _dbContext.Events.Where(o => o.EventId == id).FirstOrDefaultAsync();
-
-            if (@event == null)
-            {
-                _logger.LogError("Object not found");
-                throw new EntityNotFoundException(id, nameof(Event));
-            }
             return @event;
         }
 
