@@ -15,12 +15,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient<IEventRepository, EventRepository>();
 builder.Services.AddTransient<IOrderRepository, OrderRepository>();
 builder.Services.AddTransient<ITicketCategoryRepository, TicketCategoryRepository>();
-builder.Services.AddTransient<ICustomerRepository, CustomerRepository>();
-builder.Services.AddTransient<IVenueRepository, VenueRepository>();
-builder.Services.AddTransient<IEventTypeRepository, EventTypeRepository>();
+builder.Services.AddTransient<IEventService, EventService>();
+builder.Services.AddTransient<IOrderService, OrderService>();
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-builder.Services.AddSingleton<ITestService, TestService>();
 
 //Insert dependency injection for Logger 
 builder.Logging.ClearProviders();

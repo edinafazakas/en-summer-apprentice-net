@@ -10,6 +10,7 @@ namespace TMS.API.Profiles
         {
             CreateMap<Order, OrderDto>().ReverseMap();
             CreateMap<Order, OrderPatchDto>().ReverseMap();
+            CreateMap<Order, OrderAddDto>().ReverseMap();
         }
     }
 }
