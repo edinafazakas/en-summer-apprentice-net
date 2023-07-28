@@ -9,10 +9,13 @@ namespace TMS.API.Repositories
     public class EventRepository : IEventRepository
     {
         private readonly TicketManagementContext _dbContext;
+        private readonly ILogger _logger;
 
-        public EventRepository()
+        public EventRepository(ILogger<EventRepository> logger)
         {
             _dbContext = new TicketManagementContext();
+            _logger = logger;
+
         }
         public int Add(Event @event)
         {
@@ -37,10 +40,12 @@ namespace TMS.API.Repositories
         public async Task<Event> GetById(int id)
         {
             var @event = await _dbContext.Events.Where(o => o.EventId == id).FirstOrDefaultAsync();
-             
+
             if (@event == null)
+            {
+                _logger.LogError("Object not found");
                 throw new EntityNotFoundException(id, nameof(Event));
-            
+            }
             return @event;
         }
 
